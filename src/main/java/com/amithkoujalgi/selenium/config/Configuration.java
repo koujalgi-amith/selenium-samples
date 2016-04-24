@@ -13,6 +13,7 @@ public class Configuration {
 
 	public static class ConfigKey {
 		public static final String CREDENTIALS = "credentials";
+		public static final String QUERIES = "search_queries";
 	}
 
 	private static Configuration instance;

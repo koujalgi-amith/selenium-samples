@@ -7,15 +7,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -31,16 +27,23 @@ public class Application {
 			String credsArray = Configuration.getInstance().getProperty(Configuration.ConfigKey.CREDENTIALS);
 			JSONUtils.print(credsArray.split(","));
 			String[] userCredCombo = credsArray.split(",");
+			System.out.println("Found " + userCredCombo.length + " Facebook credentials.");
 			for (String ucc : userCredCombo) {
 				String[] userCreds = ucc.split("::");
-				String username = userCreds[0];
-				String password = userCreds[1];
+				String username = userCreds[0].trim();
+				String password = userCreds[1].trim();
 				executor.execute(new FBWorker(username, password));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		executor.shutdown();
+		while (true) {
+			if (executor.isTerminated()) {
+				System.out.println("All tasks have completed.");
+				break;
+			}
+		}
 	}
 }
 
@@ -54,88 +57,77 @@ class FBWorker implements Runnable {
 
 	@Override
 	public void run() {
+		System.out.println("Opening browser window for '" + username + "'...");
 		FirefoxDriver d = new FirefoxDriver();
+		System.out.println("Maximizing browser window for '" + username + "'...");
 		d.manage().window().maximize();
+		System.out.println("Opening Facebook page for '" + username + "'...");
 		d.get("http://www.facebook.com");
+		System.out.println("Entering Facebook credentials for '" + username + "'...");
 		d.findElement(By.id("email")).sendKeys(username);
 		d.findElement(By.id("pass")).sendKeys(password);
+		System.out.println("Signing into Facebook for '" + username + "'...");
 		d.findElement(By.id("loginbutton")).click();
+
+		waitUp(d, By.tagName("body"), 10);
+
+		if (d.getPageSource().contains("trying too often")) {
+			System.err.println("Too many sign in attempts for '" + username
+					+ "'. Couldn't login. (You won't be able to even login manually. You can try logging in after sometime though) Terminating browser window...");
+			try {
+				d.close();
+			} catch (Exception e) {
+			}
+			return;
+		}
 		if (d.getCurrentUrl().contains("login_attempt")) {
-			System.err.println("The credentials for '" + username
-					+ "' doesn't seem to be right. Terminating the browser window...");
-			d.close();
+			System.err.println("The credentials [" + username + ", " + password
+					+ "] doesn't seem to be right. Terminating the browser window...");
+			try {
+				d.close();
+			} catch (Exception e) {
+			}
+			return;
 		} else {
 			try {
+				System.out.println("Clicking on the user profile button for '" + username + "'...");
 				String userProfileBtnXpath = "//div[@id='u_0_2']/div/div/div/a/img";
 				waitUp(d, By.xpath(userProfileBtnXpath), 10);
 				d.findElement(By.xpath(userProfileBtnXpath)).click();
 
-				String userProfilePicXpath = "//a[@id='u_jsonp_2_5']/img";
+				System.out.println("Finding profile image for '" + username + "'...");
+				String userProfilePicXpath = "//div[@id='fbProfileCover']/div[2]/div[3]/div/div/a/img";
 				waitUp(d, By.xpath(userProfilePicXpath), 20);
 				String profilePicURL = d.findElement(By.xpath(userProfilePicXpath)).getAttribute("src");
 				System.out.println("Downloading profile pic of '" + username + "'...");
-				downloadImg(profilePicURL);
-
-				if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0) {
-					d.findElement(By.xpath(userProfileBtnXpath)).sendKeys(Keys.COMMAND + "t");
-				} else
-					d.findElement(By.xpath(userProfileBtnXpath)).sendKeys(Keys.CONTROL + "t");
-				Thread.sleep(1000);
-				ArrayList<String> tabs = new ArrayList<String>(d.getWindowHandles());
-				d.switchTo().window(tabs.get(tabs.size() - 1));
-				d.get("http://www.facebook.com/saved");
-				File scrFile = ((TakesScreenshot) d).getScreenshotAs(OutputType.FILE);
-				System.out.println("Screenshot: " + scrFile.getAbsolutePath());
-				signout(d);
+				downloadImg(profilePicURL, "profile-pic");
 			} catch (Exception e) {
 				if (e instanceof java.net.ConnectException) {
 					System.err.println("Browser window for '" + username + "' was closed abruptly. ");
 				} else {
 					System.err.println("Error for '" + username + "': " + e.getMessage());
-					// e.printStackTrace();
 				}
 			} finally {
+				System.out.println("Closing browser window for '" + username + "'...");
 				d.close();
 			}
 		}
-	}
-
-	public void signout(WebDriver d) {
-		d.findElement(By.id("logoutMenu")).click();
-		waitUp(d, By.linkText("Log Out"), 10);
-		d.findElement(By.linkText("Log Out")).click();
-		System.out.println("Signed out of account '" + username + "'");
 	}
 
 	public void waitUp(WebDriver d, By by, int timeoutSeconds) {
 		d.manage().timeouts().implicitlyWait(timeoutSeconds, TimeUnit.SECONDS);
 		WebDriverWait wait = new WebDriverWait(d, timeoutSeconds);
 		wait.until(ExpectedConditions.visibilityOfElementLocated(by));
-		// while (true) {
-		// try {
-		// Thread.sleep(1000);
-		// } catch (InterruptedException e1) {
-		// e1.printStackTrace();
-		// }
-		// try {
-		// WebElement elem = d.findElement(by);
-		// if (elem != null) {
-		// break;
-		// }
-		// } catch (Exception e) {
-		// System.out.println("Still waiting " + username);
-		// }
-		// }
-
 	}
 
-	public void downloadImg(String imgurl) throws IOException {
+	public void downloadImg(String imgurl, String name) throws IOException {
 		String dir = System.getProperty("user.home");
-		File parentDir = new File(dir + File.separator + "facebook-profile-pics");
+		File parentDir = new File(
+				dir + File.separator + "Selenium" + File.separator + "facebook" + File.separator + username);
 		if (!parentDir.exists()) {
 			parentDir.mkdirs();
 		}
-		File profileImg = new File(parentDir.getAbsolutePath() + File.separator + username + ".jpg");
+		File profileImg = new File(parentDir.getAbsolutePath() + File.separator + name + ".jpg");
 
 		URL url = new URL(imgurl);
 		InputStream in = new BufferedInputStream(url.openStream());
