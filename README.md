@@ -13,7 +13,7 @@
 ## Setup Maven:
 - Download the archive from here: http://mirror.fibergrid.in/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
 - Extract the contents (will create a directory 'apache-maven-3.3.9-bin')
-- Create M2_HOME and MAVEN_HOME environemnt variables with values as directory path where you extracted Maven archive (<parent-directory>\apache-maven-3.3.9-bin)
+- Create M2_HOME and MAVEN_HOME environment variables with values as directory path where you extracted Maven archive ([parent-directory]\apache-maven-3.3.9-bin)
 - Append the %M2_HOME\bin; to the 'Path' environment variable
 - Check if it works by typing the following command in your command prompt:
 ```sh
