@@ -31,7 +31,7 @@ mvn -version
 - For detailed instructions, check here: http://www.mkyong.com/maven/how-to-install-maven-in-windows/
 
 ## Build:
-- If you're building it for the first time on a particular, Maven downloads and resolves all the dependencies for the project. Subsequent builds will be faster as Maven would have already downloaded the necessary dependencies.
+- If you're building it for the first time on a particular machine, it will take some time as Maven downloads and resolves all the dependencies for the project. Subsequent builds will be faster as Maven would have already downloaded the necessary dependencies.
 - You would need to modify the configuration file to run different scenarios. To do so, you must modify the config file and MAKE SURE you build it before running the app.
 - The config file would be located in: [project-directory]/src/main/resources/config.properties
 - Go to (change directory to) the [project-directory] in the command prompt and run the following command:
