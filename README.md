@@ -1,14 +1,20 @@
 # selenium-samples
 
 ## Requirements: 
+- A machine with Windows 7 or above
 - JDK 8 or above
 - Maven v3.3 or above
 - Firefox v45 or above
 
 ## Setup Java:
 - Download Java SE Development Kit 8u91 (Select a Windows x64 distribution) from here: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
-- Install JDK from downloaded file
-- Set JAVA_HOME
+- Install JDK from the downloaded file. This would install Java in C:\Program Files\Java\jdkxxxxxx (look up your actual installation path)
+- Set JAVA_HOME environment variable with value: C:\Program Files\Java\jdkxxxxxx
+- Check if it works:
+```sh
+javac -version
+java -version
+```
 
 ## Setup Maven:
 - Download the archive from here: http://mirror.fibergrid.in/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
