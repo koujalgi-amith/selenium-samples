@@ -40,8 +40,8 @@ mvn clean compile assembly:single
 ```
 - This will generate a JAR file under [project-directory]/target directory.
 - Now, there are 2 parts of the application that you can run:
-  -- Mode 1: Open Facebook accounts of multiple users (configured in the config file) in different browser windows, capture their profile photo, save it to a directory and close the window.
-  -- Mode 2: Open different tabs in a single browser window, enter a URL in the URL bar and capture the resultant page as an image to a directory and close the tabs and finally the window.
+  - Mode 1: Open Facebook accounts of multiple users (configured in the config file) in different browser windows, capture their profile photo, save it to a directory and close the window.
+  - Mode 2: Open different tabs in a single browser window, enter a URL in the URL bar and capture the resultant page as an image to a directory and close the tabs and finally the window.
   
 For running the app in mode 1, run the following command:
 ```sh
